@@ -1,5 +1,5 @@
 @echo off
 cd /d %~dp0
 call setup.bat
-python date-rename.py %*
+python src/random-rename.py %*
 pause >nul
