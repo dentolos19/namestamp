@@ -1,0 +1,10 @@
+# environment
+.venv/
+
+# output
+__pycache__/
+
+# miscellaneous
+.DS_Store
+Desktop.ini
+Thumbs.db
