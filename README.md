@@ -1,5 +1,5 @@
-<h1 id="title">
-    <img src="docs/icon.png" style="height: 1em;" />
+<h1>
+    <img src="docs/icon.png" style="height: 1em;"/>
     <span>Sorting Visualizer</span>
 </h1>
 
