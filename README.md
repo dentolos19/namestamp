@@ -1,4 +1,7 @@
-# Files Renamer
+<h1 id="title">
+    <img src="docs/icon.png" style="height: 1em;" />
+    <span>Sorting Visualizer</span>
+</h1>
 
 A collection of scripts for renaming and organizing files easily! This is made for personal use.
 
@@ -16,3 +19,7 @@ If you just want to setup the development environment, you can run `setup.bat` w
 1. Select the files that you want to rename
 2. Drag them into the batch script that you want to use (see above for information)
 3. Done!
+
+## 💖 Credits
+
+- Icon by [Freepik](https://flaticon.com/free-icon/rename_5136887)

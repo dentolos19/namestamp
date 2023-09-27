@@ -1,6 +1,5 @@
 import argparse
 import os
-import random
 import re
 import string
 from datetime import datetime
@@ -9,12 +8,10 @@ from pathlib import Path
 from colorama import Fore
 from PIL import Image
 
+import shared
+
 GENERATIVE_CHARACTERS = string.ascii_letters + string.digits
 NAMING_PATTERN = r"\d{8}-\d{6}_[a-zA-Z0-9]{4}"
-
-
-def generate_random_string():
-    return "".join(random.choice(GENERATIVE_CHARACTERS) for _ in range(4))
 
 
 def validate_name(string):
@@ -60,7 +57,7 @@ def rename_files(files, indent=0):
                     print(f"{Fore.GREEN}{file_path.name}{Fore.RESET}")
                 else:
                     file_time = get_file_date(file_path)
-                    new_file_name = f"{file_time.strftime('%Y%m%d-%H%M%S')}_{generate_random_string()}{file_extension}"
+                    new_file_name = f"{file_time.strftime('%Y%m%d-%H%M%S')}_{shared.generate_string(4)}{file_extension}"
                     print(
                         f"{Fore.YELLOW}{file_path.name}{Fore.RESET} -> {Fore.GREEN}{new_file_name}{Fore.RESET}"
                     )

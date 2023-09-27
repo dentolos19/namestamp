@@ -7,13 +7,11 @@ from pathlib import Path
 
 from colorama import Fore
 
-GENERATIVE_CHARACTERS = string.ascii_letters + string.digits
+import shared
+
+PATTERN_CHARACTERS = string.ascii_letters + string.digits
 NAME_LENGTH = 16
 NAME_PATTERN = "[a-zA-Z0-9]" + "{" + str(NAME_LENGTH) + "}"
-
-
-def generate_random_string():
-    return "".join(random.choice(GENERATIVE_CHARACTERS) for _ in range(NAME_LENGTH))
 
 
 def validate_name(string):
@@ -38,7 +36,7 @@ def rename_files(files, indent=0):
                 if validate_name(file_path.stem):
                     print(f"{Fore.GREEN}{file_path.name}{Fore.RESET}")
                 else:
-                    new_file_name = generate_random_string() + file_extension
+                    new_file_name = shared.generate_string(NAME_LENGTH, PATTERN_CHARACTERS) + file_extension
                     print(
                         f"{Fore.YELLOW}{file_path.name}{Fore.RESET} -> {Fore.GREEN}{new_file_name}{Fore.RESET}"
                     )
