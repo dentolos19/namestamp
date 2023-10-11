@@ -1,8 +1,16 @@
 # environment
+.vs/
+.idea/
+.vscode/
+!.vscode/extensions.json
+!.vscode/launch.json
 .venv/
 
 # output
 __pycache__/
+
+# user
+*.local
 
 # miscellaneous
 .DS_Store

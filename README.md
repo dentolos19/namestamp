@@ -1,5 +1,5 @@
 <h1>
-    <img src="docs/icon.png" style="height: 1em;"/>
+    <img src="icon.png" style="height: 1em;"/>
     <span>Sorting Visualizer</span>
 </h1>
 
@@ -22,4 +22,4 @@ If you just want to setup the development environment, you can run `setup.bat` w
 
 ## 💖 Credits
 
-- Icon by [Freepik](https://flaticon.com/free-icon/rename_5136887)
+- **Icon** by [Freepik](https://flaticon.com/free-icon/rename_5136887)
