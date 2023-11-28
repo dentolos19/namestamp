@@ -1,9 +1,9 @@
 <h1>
     <img src="icon.png" style="height: 1em"/>
-    <span>Files Renamer</span>
+    <span>Photos Organizer</span>
 </h1>
 
-A collection of scripts for renaming and organizing files easily!
+A script for easily organizing your photos and videos!
 
 ## ⚒️ Usage
 
@@ -12,14 +12,6 @@ If you just want to setup the development environment, you can run `setup.bat` w
 ### Prerequities
 
 - [Python](https://python.org) 3.10+
-
-### Instructions
-
-1. Select the files that you want to rename
-2. Drag them into the batch script that you want to use
-    - `rename-randomly.bat`: Like the name says, it renames files randomly.
-    - `rename-by-date.bat`: It renames the files accordingly. In order, date taken (if the file is an image/video), date modified and then date created.
-3. Happy renaming!
 
 ## 💖 Credits
 
