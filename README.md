@@ -7,7 +7,7 @@ A script for easily organizing your photos and videos!
 
 ## ⚒️ Usage
 
-To get started, just drag the files/folder that has the photos and videos that you want to rename into `start.bat`. If you just want to setup the development environment, you can run `setup.bat` which automatically creates a Python virtual environment and installs all required dependencies.
+To get started, make sure you fulfil the prerequities below. Drag the files/folder that you want to rename into `start.bat`. To setup the development environment, run `setup.bat` which will create a Python virtual environment and install all required dependencies automatically.
 
 ### Prerequities
 
