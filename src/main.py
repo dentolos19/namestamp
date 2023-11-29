@@ -1,77 +1,68 @@
-import os
-import random
 import re
 from argparse import ArgumentParser
 from pathlib import Path
 
 from colorama import Fore
 
-import config
-import parsing
+from media import get_media_date
+from utils import generate_string
 
 NAMING_PATTERN = r"\d{8}-\d{6}_[a-zA-Z0-9]{4}"
 
 
-def generate_string(length=16, characters=config.GENERATIVE_CHARACTERS):
-    return "".join(random.choice(characters) for _ in range(length))
-
-
-def validate_name(string):
-    return re.match(NAMING_PATTERN, string)
-
-
-def rename_files(files, recurse=False, force=False, indent=0):
-    count = 0
-    for file in files:
-        count += 1
-        file_path = Path(file)
-        print(f"{' '*indent}[{Fore.BLUE}#{count}{Fore.RESET}] ", end="")
-        if file_path.is_dir():
-            print(f"{Fore.YELLOW}{file_path.name}{Fore.RESET} is a directory", end="")
-            if recurse:
-                print(", iterating...")
-                rename_files(
-                    file_path.glob("*"), True, force, indent + config.INDENT_SIZE
-                )
-            else:
-                print(", skipping...")
-                continue
-        else:
-            file_directory_path = file_path.parent
-            file_extension = file_path.suffix.lower()
-            if (not force) and validate_name(file_path.stem):
-                print(f"{Fore.GREEN}{file_path.name}{Fore.RESET}")
-            else:
-                file_time = parsing.get_image_taken(file_path)
-                new_file_name = f"{file_time.strftime('%Y%m%d-%H%M%S')}_{generate_string(4)}{file_extension}"
-                print(
-                    f"{Fore.YELLOW}{file_path.name}{Fore.RESET} -> {Fore.GREEN}{new_file_name}{Fore.RESET}"
-                )
-                file_path.rename(file_directory_path / new_file_name)
-
-
 def main():
     parser = ArgumentParser()
-    parser.add_argument("files", nargs="+", help="the full paths of files to rename")
-    parser.add_argument(
-        "-r",
-        "--recurse",
-        action="store_true",
-        help="recursively rename files in subdirectories",
-    )
-    parser.add_argument(
-        "-f",
-        "--force",
-        action="store_true",
-        help="forces renaming of files without validation",
-    )
+    parser.add_argument("files", nargs="*")
+    parser.add_argument("-r", "--recurse", action="store_true")
+    parser.add_argument("-f", "--force", action="store_true")
     args = parser.parse_args()
-    rename_files(args.files, args.recurse is True, args.force is True)
+    rename_items([Path(item) for item in args.files], args.force, args.recurse)
     print()
-    input("Press any key to exit...")
-    exit()
+    input("Press [Enter] to exit...")
+    quit()
+
+
+def check_name(value: str):
+    return re.match(NAMING_PATTERN, value)
+
+
+def rename_item(path: Path, no_check: bool = False):
+    if path.is_dir():
+        raise ValueError("The path must be a file, not a directory.")
+    new_name: str = None
+    if not no_check and check_name(path.stem):
+        new_name = path.name
+    else:
+        time = get_media_date(path)
+        new_name = f"{time.strftime('%Y%m%d-%H%M%S')}_{generate_string(4)}{path.suffix.lower()}"
+        path.rename(path.with_name(new_name))
+    return path.name, new_name
+
+
+def rename_items(
+    paths: list[Path], no_check: bool = False, recurse: bool = False, indent: int = 0
+):
+    if len(paths) == 1 and paths[0].is_dir():
+        paths = list(paths[0].iterdir())
+    for index, path in enumerate(paths):
+        print(" " * indent, end="")
+        print(f"[{Fore.BLUE}#{index + 1}{Fore.RESET}] ", end="")
+        if path.is_dir():
+            print(f"{Fore.YELLOW}{path.name}{Fore.RESET} is a directory", end="")
+            if recurse:
+                print(", recursing...")
+                rename_items(list(path.iterdir()), no_check, recurse, indent + 2)
+            else:
+                print(", skipping...")
+        else:
+            old_name, new_name = rename_item(path, no_check)
+            if old_name == new_name:
+                print(f"{Fore.GREEN}{new_name}{Fore.RESET}")
+            else:
+                print(
+                    f"{Fore.YELLOW}{old_name}{Fore.RESET} -> {Fore.GREEN}{new_name}{Fore.RESET}"
+                )
 
 
 if __name__ == "__main__":
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
     main()

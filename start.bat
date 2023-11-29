@@ -1,4 +1,4 @@
 @echo off
-call setup.bat
 cd /d %~dp0
+call setup.bat
 python src/main.py %*
