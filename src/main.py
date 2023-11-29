@@ -26,11 +26,11 @@ def check_name(value: str):
     return re.match(NAMING_PATTERN, value)
 
 
-def rename_item(path: Path, no_check: bool = False):
+def rename_item(path: Path, force: bool = False):
     if path.is_dir():
         raise ValueError("The path must be a file, not a directory.")
     new_name: str = None
-    if not no_check and check_name(path.stem):
+    if not force and check_name(path.stem):
         new_name = path.name
     else:
         time = get_media_date(path)
@@ -40,7 +40,7 @@ def rename_item(path: Path, no_check: bool = False):
 
 
 def rename_items(
-    paths: list[Path], no_check: bool = False, recurse: bool = False, indent: int = 0
+    paths: list[Path], force: bool = False, recurse: bool = False, indent: int = 0
 ):
     if len(paths) == 1 and paths[0].is_dir():
         paths = list(paths[0].iterdir())
@@ -51,11 +51,11 @@ def rename_items(
             print(f"{Fore.YELLOW}{path.name}{Fore.RESET} is a directory", end="")
             if recurse:
                 print(", recursing...")
-                rename_items(list(path.iterdir()), no_check, recurse, indent + 2)
+                rename_items(list(path.iterdir()), force, recurse, indent + 2)
             else:
                 print(", skipping...")
         else:
-            old_name, new_name = rename_item(path, no_check)
+            old_name, new_name = rename_item(path, force)
             if old_name == new_name:
                 print(f"{Fore.GREEN}{new_name}{Fore.RESET}")
             else:
