@@ -7,7 +7,7 @@ A script for easily organizing your photos and videos!
 
 ## ⚒️ Usage
 
-To get started, make sure you fulfil the prerequities below. Drag the files/folder that you want to rename into `start.bat`. To setup the development environment, run `setup.bat` which will create a Python virtual environment and install all required dependencies automatically.
+To get started, make sure you fulfil the prerequities below. Drag the file(s)/folder that you want to rename into `start.bat`. To setup the development environment, run `setup.bat` which will create a Python virtual environment and install all required dependencies automatically.
 
 ### Prerequities
 
@@ -15,7 +15,7 @@ To get started, make sure you fulfil the prerequities below. Drag the files/fold
 
 ### Flags
 
-- `-r`/`--recurse` - Recursively rename files in a directory.
+- `-r`/`--recurse` - Recursively rename files nested within directory.
 - `-f`/`--force` - Forcibly rename files without checking whether it is in the right naming convention.
 
 ## 💖 Credits

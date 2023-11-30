@@ -22,7 +22,13 @@ def main():
     quit()
 
 
+import re
+
+
 def check_name(value: str):
+    """
+    Check if the given value matches the naming pattern.
+    """
     return re.match(NAMING_PATTERN, value)
 
 
