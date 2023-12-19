@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from pathlib import Path
 
@@ -6,12 +7,16 @@ import tzlocal
 from PIL import Image
 from win32com.propsys import propsys, pscon
 
+from utils import change_file_creation_time
+
 VIDEO_EXTENSIONS = [".mp4", ".mov", ".avi", ".mkv", ".wmv", ".flv", ".webm"]
 
 
 def get_media_date(path: Path):
     if path.is_dir():
         raise ValueError("The path must be a file, not a directory.")
+    if is_from_whatsapp(path):
+        return get_date_from_whatsapp(path)
     if path.suffix.lower() in VIDEO_EXTENSIONS:
         return get_video_date(path)
     return get_picture_date(path)
@@ -57,3 +62,22 @@ def get_video_date(path: Path):
         return media_date.astimezone(tzlocal.get_localzone())
     except Exception:
         return get_picture_date(path)
+
+
+### Custom Media ###
+
+WHATSAPP_NAMING_PATTERN = r"(IMG|VID)-\d{8}-WA\d{4}"
+
+
+def is_from_whatsapp(path: Path):
+    if path.is_dir():
+        raise ValueError("The path must be a file, not a directory.")
+    return re.fullmatch(WHATSAPP_NAMING_PATTERN, path.stem) is not None
+
+
+def get_date_from_whatsapp(path: Path):
+    if path.is_dir():
+        raise ValueError("The path must be a file, not a directory.")
+    time = datetime.strptime(path.name.split("-")[1], "%Y%m%d")
+    change_file_creation_time(path, time)
+    return time
