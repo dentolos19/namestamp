@@ -1,9 +1,11 @@
 <h1>
     <img src="icon.png" style="height: 1em"/>
-    <span>Photos Organizer</span>
+    <span>Photos Renamer</span>
 </h1>
 
-A script for easily organizing your photos and videos!
+A script for easily renaming your photos and videos according to their dates!
+
+> **Note**: This script only works on Windows!
 
 ## ⚒️ Usage
 

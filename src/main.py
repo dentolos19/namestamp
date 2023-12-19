@@ -5,7 +5,7 @@ from pathlib import Path
 from colorama import Fore
 
 from media import get_media_date
-from utils import generate_string
+from utils import generate_random_string
 
 NAMING_PATTERN = r"\d{8}-\d{6}_[a-zA-Z0-9]{4}"
 
@@ -16,19 +16,15 @@ def main():
     parser.add_argument("-r", "--recurse", action="store_true")
     parser.add_argument("-f", "--force", action="store_true")
     args = parser.parse_args()
+    print("Photos Renamer")
+    print()
     rename_items([Path(item) for item in args.files], args.force, args.recurse)
     print()
     input("Press [Enter] to exit...")
     quit()
 
 
-import re
-
-
 def check_name(value: str):
-    """
-    Check if the given value matches the naming pattern.
-    """
     return re.match(NAMING_PATTERN, value)
 
 
@@ -40,7 +36,7 @@ def rename_item(path: Path, force: bool = False):
         new_name = path.name
     else:
         time = get_media_date(path)
-        new_name = f"{time.strftime('%Y%m%d-%H%M%S')}_{generate_string(4)}{path.suffix.lower()}"
+        new_name = f"{time.strftime('%Y%m%d-%H%M%S')}_{generate_random_string(4)}{path.suffix.lower()}"
         path.rename(path.with_name(new_name))
     return path.name, new_name
 
