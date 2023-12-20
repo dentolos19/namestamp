@@ -13,12 +13,13 @@ VIDEO_EXTENSIONS = [".mp4", ".mov", ".avi", ".mkv", ".wmv", ".flv", ".webm"]
 WHATSAPP_NAMING_PATTERN = r"(IMG|VID)-\d{8}-WA\d{4}"
 
 
-def get_media_date(path: Path):
+def get_media_date(path: Path, skip_patterns: bool = False):
     if path.is_dir():
         raise ValueError("The path must be a file, not a directory.")
 
-    if re.fullmatch(path.stem, WHATSAPP_NAMING_PATTERN) is not None:
-        return get_whatsapp_date(path)
+    if not skip_patterns:
+        if re.fullmatch(path.stem, WHATSAPP_NAMING_PATTERN) is not None:
+            return get_whatsapp_date(path)
 
     if path.suffix.lower() in VIDEO_EXTENSIONS:
         return get_video_date(path)
@@ -66,9 +67,13 @@ def get_video_date(path: Path):
     except Exception:
         return get_picture_date(path)
 
+
 def get_whatsapp_date(path: Path):
     if path.is_dir():
         raise ValueError("The path must be a file, not a directory.")
-    time = datetime.strptime(path.name.split("-")[1], "%Y%m%d")
-    modify_file_creation_time(path, time)
-    return time
+    try:
+        time = datetime.strptime(path.name.split("-")[1], "%Y%m%d")
+        modify_file_creation_time(path, time)
+        return time
+    except Exception:
+        return get_media_date(path, True)
