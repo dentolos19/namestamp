@@ -1,18 +1,14 @@
-# environment
+# ide files
 .vs/
 .idea/
-.vscode/
-!.vscode/extensions.json
-!.vscode/launch.json
+
+# environment files
 .venv/
 
-# output
+# output files
 __pycache__/
 
-# user
-*.local
-
-# miscellaneous
+# miscellaneous files
 .DS_Store
 Desktop.ini
 Thumbs.db

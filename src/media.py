@@ -77,3 +77,8 @@ def get_whatsapp_date(path: Path):
         return time
     except Exception:
         return get_media_date(path, True)
+
+# example: Screenshot_20240114_110317_Mobile Legends Bang Bang.jpg
+def get_screenshot_date(path: Path):
+    # TODO: implement this
+    pass
