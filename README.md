@@ -1,12 +1,12 @@
 # Photos Renamer
 
-A script for easily renaming your photos and videos according to their dates!
+A script for easily renaming your pictures and videos according to their dates!
 
 ## ⚒️ Usage
 
-To get started, make sure you fulfil the prerequities below. Drag the file(s)/folder that you want to rename into `start.bat`. To setup the development environment, run `setup.bat` which will create a Python virtual environment and install all required dependencies automatically.
+To get started, drag your files or a folder that you want to rename into `start.bat`. But make sure you fulfil the prerequisites written below! To setup the development environment, run `setup.bat` which will create a Python virtual environment and install all required dependencies automatically.
 
-### Prerequities
+### Prerequisites
 
 - [Python](https://python.org) 3.10+
 
