@@ -1,6 +1,6 @@
 # Photos Renamer
 
-A script for easily renaming your pictures and videos according to their dates!
+A simple tool for easily renaming your pictures and videos according to their dates!
 
 ## Usage
 
