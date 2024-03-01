@@ -3,9 +3,8 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 from colorama import Fore
-
 from media import get_media_date
-from utils import generate_random_string
+from utils import check_file_path, generate_random_string
 
 INDENT_SIZE = 2
 NAMING_PATTERN = r"\d{8}-\d{6}_[a-zA-Z0-9]{4}"
@@ -40,8 +39,7 @@ def check_name(value: str):
 def rename_item(
     path: Path, force: bool = False, skip_patterns: bool = False, dry_run: bool = False
 ):
-    if path.is_dir():
-        raise ValueError("The path must be a file, not a directory.")
+    check_file_path(path)
     new_name: str = None
     if not force and check_name(path.stem):
         new_name = path.name

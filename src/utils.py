@@ -6,11 +6,18 @@ from pathlib import Path
 import pywintypes
 import win32file
 
+CHARACTERS = string.ascii_letters + string.digits
 
-def generate_random_string(
-    length: int = 16, characters: str = string.ascii_letters + string.digits
-):
-    return "".join(random.choice(characters) for _ in range(length))
+
+def generate_random_string(length: int = 16):
+    return "".join(random.choice(CHARACTERS) for _ in range(length))
+
+
+def check_file_path(path: Path):
+    if not path.exists():
+        raise FileNotFoundError("The file does not exist.")
+    if path.is_dir():
+        raise ValueError("The path must be a file, not a directory.")
 
 
 def modify_file_creation_time(path: Path, time: datetime):

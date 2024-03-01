@@ -4,22 +4,27 @@ from pathlib import Path
 
 import pytz
 import tzlocal
+from patterns.screenshots import ScreenshotsPattern
+from patterns.whatsapp import WhatsAppPattern
 from PIL import Image
+from utils import check_file_path
 from win32com.propsys import propsys, pscon
 
-from utils import modify_file_creation_time
-
 VIDEO_EXTENSIONS = [".mp4", ".mov", ".avi", ".mkv", ".wmv", ".flv", ".webm"]
-WHATSAPP_NAMING_PATTERN = r"(IMG|VID)-\d{8}-WA\d{4}"
+
+SCREENSHOTS_PATTERN = ScreenshotsPattern()
+WHATSAPP_PATTERN = WhatsAppPattern()
 
 
 def get_media_date(path: Path, skip_patterns: bool = False):
-    if path.is_dir():
-        raise ValueError("The path must be a file, not a directory.")
-
+    check_file_path(path)
     if not skip_patterns:
-        if re.fullmatch(path.stem, WHATSAPP_NAMING_PATTERN) is not None:
-            return get_whatsapp_date(path)
+        if WHATSAPP_PATTERN.check_pattern(path):
+            date = WHATSAPP_PATTERN.get_date(path)
+            return date if date is not None else get_media_date(path, True)
+        if SCREENSHOTS_PATTERN.check_pattern(path):
+            date = SCREENSHOTS_PATTERN.get_date(path)
+            return date if date is not None else get_media_date(path, True)
 
     if path.suffix.lower() in VIDEO_EXTENSIONS:
         return get_video_date(path)
@@ -27,9 +32,8 @@ def get_media_date(path: Path, skip_patterns: bool = False):
 
 
 def get_earliest_date(path: Path):
-    if path.is_dir():
-        raise ValueError("The path must be a file, not a directory.")
-    date_created = datetime.fromtimestamp(path.stat().st_ctime)
+    check_file_path(path)
+    date_created = datetime.fromtimestamp(path.stat().st_birthtime)
     date_modified = datetime.fromtimestamp(path.stat().st_mtime)
     return (
         date_created
@@ -39,8 +43,7 @@ def get_earliest_date(path: Path):
 
 
 def get_picture_date(path: Path):
-    if path.is_dir():
-        raise ValueError("The path must be a file, not a directory.")
+    check_file_path(path)
     try:
         exif = Image.open(path)._getexif()
         if not exif:
@@ -55,8 +58,7 @@ def get_picture_date(path: Path):
 
 
 def get_video_date(path: Path):
-    if path.is_dir():
-        raise ValueError("The path must be a file, not a directory.")
+    check_file_path(path)
     try:
         properties = propsys.SHGetPropertyStoreFromParsingName(str(path))
         media_date = properties.GetValue(pscon.PKEY_Media_DateEncoded).GetValue()
@@ -66,19 +68,3 @@ def get_video_date(path: Path):
         return media_date.astimezone(tzlocal.get_localzone())
     except Exception:
         return get_picture_date(path)
-
-
-def get_whatsapp_date(path: Path):
-    if path.is_dir():
-        raise ValueError("The path must be a file, not a directory.")
-    try:
-        time = datetime.strptime(path.name.split("-")[1], "%Y%m%d")
-        modify_file_creation_time(path, time)
-        return time
-    except Exception:
-        return get_media_date(path, True)
-
-# example: Screenshot_20240114_110317_Mobile Legends Bang Bang.jpg
-def get_screenshot_date(path: Path):
-    # TODO: implement this
-    pass

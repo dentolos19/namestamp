@@ -1,12 +1,15 @@
 # ide files
-.vs/
-.idea/
+.vs
+.idea
 
 # environment files
-.venv/
+.venv
 
 # output files
-__pycache__/
+__pycache__
+
+# user-specific files
+public/examples
 
 # miscellaneous files
 .DS_Store
