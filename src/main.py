@@ -2,7 +2,8 @@ import re
 from argparse import ArgumentParser
 from pathlib import Path
 
-from colorama import Fore
+from art import text2art
+from colorama import Fore, just_fix_windows_console
 from media import get_media_date
 from utils import check_file_path, generate_random_string
 
@@ -13,22 +14,40 @@ NAMING_PATTERN = r"\d{8}-\d{6}_[a-zA-Z0-9]{4}"
 def main():
     parser = ArgumentParser()
     parser.add_argument("files", nargs="*")
+    parser.add_argument("-v", "--verbose", action="store_true")
     parser.add_argument("-r", "--recurse", action="store_true")
     parser.add_argument("-f", "--force", action="store_true")
     parser.add_argument("-p", "--skip-patterns", action="store_true")
     parser.add_argument("-d", "--dry-run", action="store_true")
     args = parser.parse_args()
-    print("Photos Renamer")
-    print()
+    args_files: list[str] = args.files
+    args_verbose: bool = args.verbose
+    args_recurse: bool = args.recurse
+    args_force: bool = args.force
+    args_skip_patterns: bool = args.skip_patterns
+    args_dry_run: bool = args.dry_run
+
+    just_fix_windows_console()
+    print(text2art("Photos Renamer", font="small"))
+
+    if args_verbose:
+        print("Your current options:")
+        print("- Recurse:", f"{Fore.GREEN}On{Fore.RESET}" if args_recurse else f"{Fore.RED}Off{Fore.RESET}")
+        print("- Force:", f"{Fore.GREEN}On{Fore.RESET}" if args_force else f"{Fore.RED}Off{Fore.RESET}")
+        print("- Skip Patterns:", f"{Fore.GREEN}On{Fore.RESET}" if args_skip_patterns else f"{Fore.RED}Off{Fore.RESET}")
+        print("- Dry Run:", f"{Fore.GREEN}On{Fore.RESET}" if args_dry_run else f"{Fore.RED}Off{Fore.RESET}")
+        print()
+
     rename_items(
-        [Path(item) for item in args.files],
-        force=args.force,
-        recurse=args.recurse,
-        skip_patterns=args.skip_patterns,
-        dry_run=args.dry_run,
+        [Path(item) for item in args_files],
+        force=args_force,
+        recurse=args_recurse,
+        skip_patterns=args_skip_patterns,
+        dry_run=args_dry_run,
     )
+
     print()
-    input("Press [Enter] to exit...")
+    input(f"Press {Fore.CYAN}[Enter]{Fore.RESET} to exit...")
     quit()
 
 
