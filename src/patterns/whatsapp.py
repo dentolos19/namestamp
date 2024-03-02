@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-from utils import check_file_path, modify_file_creation_time
+from utils import check_file_path
 
 
 class WhatsAppPattern:
@@ -17,7 +17,6 @@ class WhatsAppPattern:
         check_file_path(path)
         try:
             time = datetime.strptime(path.name.split("-")[1], "%Y%m%d")
-            modify_file_creation_time(path, time)
             return time
         except Exception:
             return None

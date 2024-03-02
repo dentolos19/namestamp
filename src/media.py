@@ -10,7 +10,6 @@ from utils import check_file_path
 from win32com.propsys import propsys, pscon
 
 VIDEO_EXTENSIONS = [".mp4", ".mov", ".avi", ".mkv", ".wmv", ".flv", ".webm"]
-
 SCREENSHOTS_PATTERN = ScreenshotsPattern()
 WHATSAPP_PATTERN = WhatsAppPattern()
 
@@ -24,7 +23,6 @@ def get_media_date(path: Path, skip_patterns: bool = False):
         if SCREENSHOTS_PATTERN.check_pattern(path):
             date = SCREENSHOTS_PATTERN.get_date(path)
             return date if date is not None else get_media_date(path, True)
-
     if path.suffix.lower() in VIDEO_EXTENSIONS:
         return get_video_date(path)
     return get_picture_date(path)

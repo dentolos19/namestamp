@@ -16,7 +16,8 @@ class ScreenshotsPattern:
     def get_date(self, path: Path):
         check_file_path(path)
         try:
-            split_stem = path.stem.split("_")
-            return datetime.strptime(split_stem[1] + split_stem[2], "%Y%m%d%H%M%S")
+            split = path.stem.split("_")
+            time = datetime.strptime(split[1] + split[2], "%Y%m%d%H%M%S")
+            return time
         except Exception:
             return None
