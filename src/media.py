@@ -7,7 +7,7 @@ from patterns.screenshots import ScreenshotsPattern
 from patterns.whatsapp import WhatsAppPattern
 from PIL import Image
 from utils import check_file_path
-from win32com.propsys import propsys, pscon
+from win32com.propsys import propsys, pscon  # type: ignore
 
 VIDEO_EXTENSIONS = [".mp4", ".mov", ".avi", ".mkv", ".wmv", ".flv", ".webm"]
 SCREENSHOTS_PATTERN = ScreenshotsPattern()
