@@ -1,54 +1,12 @@
 import re
-from argparse import ArgumentParser
 from pathlib import Path
 
-from colorama import Fore, just_fix_windows_console
+from colorama import Fore
 from media import get_media_date
 from utils import check_file_path, generate_random_string
 
 INDENT_SIZE = 2
 NAMING_PATTERN = r"\d{8}-\d{6}_[a-zA-Z0-9]{4}"
-
-
-def init():
-    parser = ArgumentParser()
-    parser.add_argument("files", nargs="*")
-    parser.add_argument("-r", "--recurse", action="store_true")
-    parser.add_argument("-f", "--force", action="store_true")
-    parser.add_argument("-p", "--skip-patterns", action="store_true")
-    parser.add_argument("-t", "--test", action="store_true")
-    args = parser.parse_args()
-    main(
-        args.files,
-        recurse=args.recurse,
-        force=args.force,
-        skip_patterns=args.skip_patterns,
-        test=args.test,
-    )
-
-
-def main(
-    files: list[str],
-    recurse: bool,
-    force: bool,
-    skip_patterns: bool,
-    test: bool,
-):
-    just_fix_windows_console()
-
-    rename_items(
-        [Path(item) for item in files],
-        force=force,
-        recurse=recurse,
-        skip_patterns=skip_patterns,
-        test=test,
-    )
-
-    if test:
-        print()
-        input(f"Press {Fore.CYAN}[Enter]{Fore.RESET} to exit...")
-        quit()
-
 
 def check_name(value: str):
     return re.match(NAMING_PATTERN, value)
@@ -104,7 +62,3 @@ def rename_items(
                 print(
                     f"{Fore.YELLOW}{old_name}{Fore.RESET} -> {Fore.GREEN}{new_name}{Fore.RESET}"
                 )
-
-
-if __name__ == "__main__":
-    init()
