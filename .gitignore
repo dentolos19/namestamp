@@ -11,7 +11,7 @@ dist/
 __pycache__/
 
 # User-specific files
-public/examples/
+docs/examples/
 
 # Miscellaneous files
 .DS_Store
