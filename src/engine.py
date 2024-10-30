@@ -11,32 +11,27 @@ class Item:
     def __init__(self, path: Path):
         self.path = path
         self.name = path.name
-        self.new_name = path.name
+        self.proposed_name = path.name
+        self.is_dir = path.is_dir()
+        self.items: list[Item] = []
 
-        if not re.fullmatch(NAMING_PATTERN, path.stem):
-            time = get_media_date(path)
-            self.new_name = f"{time.strftime('%Y%m%d-%H%M%S')}_{generate_random_string(4)}{path.suffix.lower()}"
+        if self.is_dir:
+            files = list(path.iterdir())
+            self.items = get_items(files)
+        else:
+            if not re.fullmatch(NAMING_PATTERN, path.stem):
+                time = get_media_date(path)
+                self.proposed_name = f"{time.strftime('%Y%m%d-%H%M%S')}_{generate_random_string(4)}{path.suffix.lower()}"
 
     def rename(self):
-        if self.name == self.new_name:
+        if self.is_dir or self.name == self.proposed_name:
             return False
-        self.path = self.path.rename(self.path.with_name(self.new_name))
+        self.path = self.path.rename(self.path.with_name(self.proposed_name))
         self.name = self.path.name
         return True
 
 
 def get_items(paths: list[Path]):
-    items: list[Item] = []
-    for path in paths:
-        items.extend(get_item(path))
-    return items
-
-
-def get_item(path: Path):
-    items: list[Item] = []
-    if path.is_file():
-        items.append(Item(path))
-    else:
-        for item in path.iterdir():
-            items.extend(get_item(item))
-    return items
+    if len(paths) == 1 and paths[0].is_dir():
+        return get_items(list(paths[0].iterdir()))
+    return [Item(path) for path in paths]

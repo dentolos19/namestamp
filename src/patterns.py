@@ -1,13 +1,14 @@
 import re
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 
 class Pattern:
     def check_pattern(path: Path) -> bool:
         return False
 
-    def get_date(path: Path) -> datetime:
+    def get_date(path: Path) -> Optional[datetime]:
         return None
 
 
