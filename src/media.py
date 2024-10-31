@@ -4,10 +4,11 @@ from pathlib import Path
 from PIL import Image
 from win32com.propsys import propsys, pscon  # type: ignore
 
-from patterns import Pattern, ScreenshotsPattern, WhatsAppPattern
+from patterns import Pattern
 
 VIDEO_EXTENSIONS: list[str] = [".mp4", ".mov", ".avi", ".mkv", ".wmv", ".flv", ".webm"]
-NAMING_PATTERNS: list[Pattern] = [ScreenshotsPattern(), WhatsAppPattern()]
+NAMING_PATTERNS: list[Pattern] = []
+# NAMING_PATTERNS: list[Pattern] = [ScreenshotsPattern(), WhatsAppPattern()]
 
 
 def get_earliest_date(path: Path):
