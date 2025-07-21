@@ -1,0 +1,31 @@
+name: Build
+on:
+  push:
+    branches:
+      - staging
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v3
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Synchronize Dependencies
+        run: uv sync --frozen --compile-bytecode --no-editable
+
+      - name: Build Project
+        run: uv run pyinstaller src/main.py
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: app.exe
+          path: dist/main.exe

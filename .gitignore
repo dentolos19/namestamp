@@ -9,6 +9,7 @@
 build/
 dist/
 __pycache__/
+*.spec
 
 # User-specific files
 docs/examples/
