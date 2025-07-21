@@ -1,9 +1,9 @@
 <h1>
   <img src="docs/icon.png" alt="Icon" height="30" />
-  <span>Photos Renamer</span>
+  <span>Namestamp</span>
 </h1>
 
-A simple tool for easily renaming your pictures and videos according to their dates!
+A simple tool for easily stamping your pictures and videos according to their dates!
 
 ## ⚒️ Usage
 

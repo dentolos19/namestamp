@@ -6,12 +6,12 @@
 .venv/
 
 # Output files
+__pycache__/
 build/
 dist/
-__pycache__/
 *.spec
 
-# User-specific files
+# Project-specific files
 docs/examples/
 
 # Miscellaneous files
