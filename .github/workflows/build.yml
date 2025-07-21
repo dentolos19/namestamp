@@ -17,7 +17,7 @@ jobs:
         uses: astral-sh/setup-uv@v6
 
       - name: Synchronize Dependencies
-        run: uv sync --locked --frozen --compile-bytecode
+        run: uv sync
 
       - name: Build Project
         run: uv run pyinstaller src/main.py --onefile --name app.exe
