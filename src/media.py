@@ -14,11 +14,7 @@ NAMING_PATTERNS: list[Pattern] = []
 def get_earliest_date(path: Path):
     date_created = datetime.fromtimestamp(path.stat().st_birthtime)
     date_modified = datetime.fromtimestamp(path.stat().st_mtime)
-    return (
-        date_created
-        if date_created.timestamp() < date_modified.timestamp()
-        else date_modified
-    )
+    return date_created if date_created.timestamp() < date_modified.timestamp() else date_modified
 
 
 def get_picture_date(path: Path):

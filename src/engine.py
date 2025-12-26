@@ -21,7 +21,9 @@ class Item:
         else:
             if not re.fullmatch(NAMING_PATTERN, path.stem):
                 time = get_media_date(path)
-                self.proposed_name = f"{time.strftime('%Y%m%d-%H%M%S')}_{generate_random_string(4)}{path.suffix.lower()}"
+                self.proposed_name = (
+                    f"{time.strftime('%Y%m%d-%H%M%S')}_{generate_random_string(4)}{path.suffix.lower()}"
+                )
 
     def rename(self):
         if self.is_dir or self.name == self.proposed_name:

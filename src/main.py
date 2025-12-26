@@ -31,9 +31,7 @@ def process(items: list[Item], count: int = 0, indent: int = 0, test: bool = Fal
             if item.proposed_name == item.name:
                 print(f"{Fore.GREEN}{item.name}{Fore.RESET}")
             else:
-                print(
-                    f"{Fore.YELLOW}{item.name}{Fore.RESET} -> {Fore.GREEN}{item.proposed_name}{Fore.RESET}"
-                )
+                print(f"{Fore.YELLOW}{item.name}{Fore.RESET} -> {Fore.GREEN}{item.proposed_name}{Fore.RESET}")
             if not test:
                 item.rename()
     return count
