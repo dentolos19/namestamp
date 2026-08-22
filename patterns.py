@@ -1,55 +1,67 @@
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
-
-NAMING_PATTERN = r"(?P<date>\d{8})-(?P<time>\d{6})_[a-zA-Z0-9]{4}"
-
-
-def parse_date(path: Path):
-    match = re.fullmatch(NAMING_PATTERN, path.stem)
-    if match is None:
-        return None
-    try:
-        return datetime.strptime(match.group("date") + match.group("time"), "%Y%m%d%H%M%S")
-    except ValueError:
-        return None
 
 
 class Pattern:
-    def check_pattern(self, path: Path) -> bool:
-        return False
+    naming_pattern = ""
+    date_format = ""
+    date_groups: tuple[str, ...] = ()
 
-    def get_date(self, path: Path) -> Optional[datetime]:
-        return None
+    def match(self, path: Path):
+        return re.fullmatch(self.naming_pattern, path.stem)
+
+    def check_pattern(self, path: Path):
+        return self.match(path) is not None
+
+    def get_date(self, path: Path):
+        match = self.match(path)
+        if match is None:
+            return None
+
+        try:
+            value = "".join(match.group(group) for group in self.date_groups)
+            return datetime.strptime(value, self.date_format)
+        except ValueError:
+            return None
+
+
+class PhotostampPattern(Pattern):
+    # Example: 20260605-104448_XTMS
+    naming_pattern = r"(?P<date>\d{8})-(?P<time>\d{6})_[a-zA-Z0-9]{4}"
+    date_format = "%Y%m%d%H%M%S"
+    date_groups = ("date", "time")
 
 
 class ScreenshotsPattern(Pattern):
-    # example: Screenshot_20240114_110317_Mobile Legends Bang Bang
-    NAMING_PATTERN = r"Screenshot_\d{8}_\d{6}_.*"
-
-    def check_pattern(self, path: Path):
-        return re.fullmatch(self.NAMING_PATTERN, path.stem) is not None
-
-    def get_date(self, path: Path):
-        try:
-            split = path.stem.split("_")
-            time = datetime.strptime(split[1] + split[2], "%Y%m%d%H%M%S")
-            return time
-        except Exception:
-            return None
+    # Example: Screenshot_20240114_110317_Mobile Legends Bang Bang
+    naming_pattern = r"Screenshot_(?P<date>\d{8})_(?P<time>\d{6})(?:_.*)?"
+    date_format = "%Y%m%d%H%M%S"
+    date_groups = ("date", "time")
 
 
 class WhatsAppPattern(Pattern):
-    # example: IMG-20210531-WA0000, VID-20210531-WA0000
-    NAMING_PATTERN = r"(IMG|VID)-\d{8}-WA\d{4}"
+    # Example: IMG-20210531-WA0000, VID-20210531-WA0000
+    naming_pattern = r"(?:IMG|VID)-(?P<date>\d{8})-WA\d{4}"
+    date_format = "%Y%m%d"
+    date_groups = ("date",)
 
-    def check_pattern(self, path: Path):
-        return re.fullmatch(self.NAMING_PATTERN, path.stem) is not None
 
-    def get_date(self, path: Path):
-        try:
-            time = datetime.strptime(path.name.split("-")[1], "%Y%m%d")
-            return time
-        except Exception:
-            return None
+PHOTOSTAMP_PATTERN = PhotostampPattern()
+NAMING_PATTERNS: tuple[Pattern, ...] = (
+    PHOTOSTAMP_PATTERN,
+    ScreenshotsPattern(),
+    WhatsAppPattern(),
+)
+
+
+def parse_date(path: Path):
+    for pattern in NAMING_PATTERNS:
+        date = pattern.get_date(path)
+        if date is not None:
+            return date
+    return None
+
+
+def is_photostamp_name(path: Path):
+    return PHOTOSTAMP_PATTERN.get_date(path) is not None

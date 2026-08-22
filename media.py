@@ -2,19 +2,22 @@ import sys
 import warnings
 from datetime import datetime, timezone
 from pathlib import Path
+from shutil import which
+from subprocess import CalledProcessError, run
+from tempfile import NamedTemporaryFile
 
+import piexif
 from hachoir.core import config as hachoir_config
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
 from PIL import Image
 
-from patterns import Pattern, parse_date
+from patterns import parse_date
 
 IMAGE_EXTENSIONS: list[str] = [".jpg", ".jpeg", ".png", ".tif", ".tiff", ".webp"]
+JPEG_EXTENSIONS: list[str] = [".jpg", ".jpeg"]
 VIDEO_EXTENSIONS: list[str] = [".mp4", ".mov", ".avi", ".mkv", ".wmv", ".flv", ".webm"]
-WRITABLE_METADATA_EXTENSIONS: list[str] = [".jpg", ".jpeg", ".png", ".tif", ".tiff", ".webp"]
-NAMING_PATTERNS: list[Pattern] = []
-# NAMING_PATTERNS: list[Pattern] = [ScreenshotsPattern(), WhatsAppPattern()]
+WRITABLE_IMAGE_METADATA_EXTENSIONS: list[str] = [".jpg", ".jpeg", ".png", ".tif", ".tiff", ".webp"]
 MIN_VALID_YEAR = 1970
 MIN_VALID_DATE = datetime(MIN_VALID_YEAR, 1, 1)
 EXIF_IFD_TAG = 0x8769
@@ -31,7 +34,8 @@ def is_supported_media(path: Path):
 
 
 def can_write_metadata(path: Path):
-    return path.suffix.lower() in WRITABLE_METADATA_EXTENSIONS
+    suffix = path.suffix.lower()
+    return suffix in WRITABLE_IMAGE_METADATA_EXTENSIONS or (suffix in VIDEO_EXTENSIONS and which("ffmpeg") is not None)
 
 
 def is_valid_date(date_value: datetime):
@@ -68,13 +72,17 @@ def get_earliest_date(path: Path):
     return MIN_VALID_DATE
 
 
-def get_picture_date(path: Path):
+def get_picture_metadata_date(path: Path):
     date_taken = None
     try:
         with Image.open(path) as image:
             exif = image.getexif()
         if exif:
-            raw_date_taken = exif.get(EXIF_DATETIME_ORIGINAL_TAG) or exif.get(EXIF_DATETIME_TAG)
+            raw_date_taken = (
+                exif.get(EXIF_DATETIME_ORIGINAL_TAG)
+                or exif.get(EXIF_DATETIME_DIGITIZED_TAG)
+                or exif.get(EXIF_DATETIME_TAG)
+            )
             if isinstance(raw_date_taken, bytes):
                 raw_date_taken = raw_date_taken.decode("ascii")
             if raw_date_taken:
@@ -83,19 +91,18 @@ def get_picture_date(path: Path):
         date_taken = None
     if date_taken and is_valid_date(date_taken):
         return date_taken
-    else:
-        return get_earliest_date(path)
+    return None
 
 
-def get_video_date(path: Path):
+def get_video_metadata_date(path: Path):
     try:
         parser = createParser(str(path))
         if not parser:
-            return get_picture_date(path)
+            return None
         with parser:
             metadata = extractMetadata(parser)
         if not metadata:
-            return get_picture_date(path)
+            return None
 
         # Prefer the creation date embedded in the container (e.g. QuickTime/MP4
         # "mvhd" box) over the modification date.
@@ -103,7 +110,7 @@ def get_video_date(path: Path):
         if not media_date:
             media_date = metadata.get("last_modification")
         if not media_date:
-            return get_picture_date(path)
+            return None
 
         # hachoir returns naive datetimes in UTC for container timestamps.
         if media_date.tzinfo is None:
@@ -111,38 +118,100 @@ def get_video_date(path: Path):
         media_date = media_date.astimezone()
         if is_valid_date(media_date):
             return media_date
-        return get_picture_date(path)
+        return None
     except Exception:
-        return get_picture_date(path)
+        return None
+
+
+def get_media_metadata_date(path: Path):
+    if path.suffix.lower() in VIDEO_EXTENSIONS:
+        return get_video_metadata_date(path)
+    return get_picture_metadata_date(path)
 
 
 def get_media_date(path: Path):
-    for pattern in NAMING_PATTERNS:
-        if pattern.check_pattern(path):
-            return pattern.get_date(path)
-    if path.suffix.lower() in VIDEO_EXTENSIONS:
-        return get_video_date(path)
-    return get_picture_date(path)
+    metadata_date = get_media_metadata_date(path)
+    if metadata_date:
+        return metadata_date
+    filename_date = parse_date(path)
+    if filename_date:
+        return filename_date
+    return get_earliest_date(path)
 
 
-def write_metadata_date_from_name(path: Path):
-    if not can_write_metadata(path):
-        raise ValueError(f"Cannot write EXIF metadata for unsupported file type: {path}")
-
-    date_taken = parse_date(path)
-    if date_taken is None:
-        return False
-
+def write_image_metadata_date(path: Path, date_taken: datetime):
     exif_date = date_taken.strftime("%Y:%m:%d %H:%M:%S")
-    encoded_exif_date = exif_date.encode("ascii")
+
+    if path.suffix.lower() in JPEG_EXTENSIONS:
+        encoded_exif_date = exif_date.encode("ascii")
+        exif = piexif.load(str(path))
+        exif["0th"][piexif.ImageIFD.DateTime] = encoded_exif_date
+        exif["Exif"][piexif.ExifIFD.DateTimeOriginal] = encoded_exif_date
+        exif["Exif"][piexif.ExifIFD.DateTimeDigitized] = encoded_exif_date
+        piexif.insert(piexif.dump(exif), str(path))
+        return
 
     with Image.open(path) as image:
         image.load()
         exif = image.getexif()
         exif[EXIF_DATETIME_TAG] = exif_date
         exif_ifd = exif.get_ifd(EXIF_IFD_TAG)
-        exif_ifd[EXIF_DATETIME_ORIGINAL_TAG] = encoded_exif_date
-        exif_ifd[EXIF_DATETIME_DIGITIZED_TAG] = encoded_exif_date
+        exif_ifd[EXIF_DATETIME_ORIGINAL_TAG] = exif_date
+        exif_ifd[EXIF_DATETIME_DIGITIZED_TAG] = exif_date
         image.save(path, exif=exif)
 
+
+def write_video_metadata_date(path: Path, date_taken: datetime):
+    with NamedTemporaryFile(
+        dir=path.parent, prefix=f".{path.stem}-", suffix=path.suffix, delete=False
+    ) as temporary_file:
+        temporary_path = Path(temporary_file.name)
+
+    # Container creation timestamps are UTC, while stamped filenames use local time.
+    creation_time = date_taken.astimezone().astimezone(timezone.utc).isoformat(timespec="seconds")
+    try:
+        run(
+            [
+                "ffmpeg",
+                "-y",
+                "-i",
+                str(path),
+                "-map",
+                "0",
+                "-map_metadata",
+                "0",
+                "-c",
+                "copy",
+                "-metadata",
+                f"creation_time={creation_time}",
+                "-metadata",
+                f"date={date_taken.isoformat(timespec='seconds')}",
+                str(temporary_path),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        temporary_path.replace(path)
+    except CalledProcessError as error:
+        temporary_path.unlink(missing_ok=True)
+        raise ValueError(f"Could not write video metadata for {path}: {error.stderr.strip()}") from error
+
+
+def write_metadata_date(path: Path, date_taken: datetime):
+    if not can_write_metadata(path):
+        raise ValueError(f"Cannot write metadata for unsupported file type: {path}")
+
+    if path.suffix.lower() in VIDEO_EXTENSIONS:
+        write_video_metadata_date(path, date_taken)
+    else:
+        write_image_metadata_date(path, date_taken)
+
     return True
+
+
+def write_metadata_date_from_name(path: Path):
+    date_taken = parse_date(path)
+    if date_taken is None:
+        return False
+    return write_metadata_date(path, date_taken)

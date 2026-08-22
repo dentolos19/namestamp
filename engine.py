@@ -1,8 +1,17 @@
 import os
+from calendar import monthrange
+from datetime import timedelta
 from pathlib import Path
 
-from media import can_write_metadata, get_media_date, is_supported_media, write_metadata_date_from_name
-from patterns import parse_date
+from media import (
+    can_write_metadata,
+    get_media_date,
+    get_media_metadata_date,
+    is_supported_media,
+    write_metadata_date,
+    write_metadata_date_from_name,
+)
+from patterns import is_photostamp_name, parse_date
 from utils import generate_random_string
 
 MAX_NAME_ATTEMPTS = 1000
@@ -10,6 +19,28 @@ MAX_NAME_ATTEMPTS = 1000
 
 def dates_match(first, second):
     return first.strftime("%Y%m%d-%H%M%S") == second.strftime("%Y%m%d-%H%M%S")
+
+
+def add_date_offset(date_value, offset: tuple[int, int, int, int, int] | None):
+    if offset is None or date_value is None:
+        return None
+
+    years, months, days, hours, minutes = offset
+    month_index = (date_value.year + years) * 12 + date_value.month - 1 + months
+    adjusted_year, adjusted_month_index = divmod(month_index, 12)
+    adjusted_month = adjusted_month_index + 1
+    if not 1 <= adjusted_year <= 9999:
+        raise ValueError(f"Date offset moves {date_value:%Y-%m-%d %H:%M:%S} outside the supported year range")
+
+    adjusted_day = min(date_value.day, monthrange(adjusted_year, adjusted_month)[1])
+    try:
+        return date_value.replace(year=adjusted_year, month=adjusted_month, day=adjusted_day) + timedelta(
+            days=days,
+            hours=hours,
+            minutes=minutes,
+        )
+    except (OverflowError, ValueError) as error:
+        raise ValueError(f"Cannot apply date offset to {date_value:%Y-%m-%d %H:%M:%S}") from error
 
 
 def generate_media_name(path: Path, reserved_names: set[str], media_date):
@@ -51,6 +82,7 @@ class Item:
         linked_names: dict[Path, str] | None = None,
         linked_items: dict[Path, list["Item"]] | None = None,
         linked_target_paths: dict[Path, Path] | None = None,
+        date_offset: tuple[int, int, int, int, int] | None = None,
     ):
         self.path = path
         self.name = path.name
@@ -59,6 +91,9 @@ class Item:
         self.is_supported_media = False
         self.filename_date = None
         self.can_write_metadata = False
+        self.should_write_metadata = False
+        self.adjusted_metadata_date = None
+        self.metadata_date_to_write = None
         self.linked_path: Path | None = None
         self.linked_target_paths: dict[Path, Path] = {}
         self.items: list[Item] = []
@@ -77,6 +112,7 @@ class Item:
                 linked_names=linked_names,
                 linked_items=linked_items,
                 linked_target_paths=linked_target_paths,
+                date_offset=date_offset,
             )
         else:
             self.is_supported_media = is_supported_media(path)
@@ -86,14 +122,22 @@ class Item:
             if not self.is_supported_media:
                 return
 
+            metadata_date = get_media_metadata_date(path)
             media_date = get_media_date(path)
             if not media_date:
                 return
+            self.adjusted_metadata_date = add_date_offset(metadata_date, date_offset)
+            if self.adjusted_metadata_date is not None:
+                media_date = self.adjusted_metadata_date
+                self.metadata_date_to_write = self.adjusted_metadata_date
+            elif self.filename_date is not None and metadata_date is None:
+                self.metadata_date_to_write = self.filename_date
+            self.should_write_metadata = self.metadata_date_to_write is not None and self.can_write_metadata
 
             linked_path = path.resolve()
             self.linked_path = linked_path
             linked_items.setdefault(linked_path, []).append(self)
-            has_current_name = self.filename_date and dates_match(media_date, self.filename_date)
+            has_current_name = is_photostamp_name(path) and dates_match(media_date, self.filename_date)
             has_normalized_suffix = path.suffix == path.suffix.lower()
             if has_current_name and has_normalized_suffix:
                 set_linked_name(linked_path, self.name, linked_names, linked_items)
@@ -154,12 +198,18 @@ class Item:
             return False
         return write_metadata_date_from_name(self.path)
 
+    def write_metadata(self):
+        if self.is_dir or self.metadata_date_to_write is None:
+            return False
+        return write_metadata_date(self.path, self.metadata_date_to_write)
+
 
 def get_items(
     paths: list[Path],
     linked_names: dict[Path, str] | None = None,
     linked_items: dict[Path, list[Item]] | None = None,
     linked_target_paths: dict[Path, Path] | None = None,
+    date_offset: tuple[int, int, int, int, int] | None = None,
 ):
     if linked_names is None:
         linked_names = {}
@@ -173,6 +223,7 @@ def get_items(
             linked_names=linked_names,
             linked_items=linked_items,
             linked_target_paths=linked_target_paths,
+            date_offset=date_offset,
         )
     reserved_names = {path.name for path in paths}
     return [
@@ -182,6 +233,7 @@ def get_items(
             linked_names=linked_names,
             linked_items=linked_items,
             linked_target_paths=linked_target_paths,
+            date_offset=date_offset,
         )
         for path in paths
     ]

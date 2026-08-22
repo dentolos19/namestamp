@@ -2,13 +2,10 @@
 name = "photostamp"
 version = "1.0.0"
 requires-python = ">=3.13"
-dependencies = ["colorama", "hachoir", "pillow"]
+dependencies = ["colorama", "hachoir", "piexif>=1.1.3", "pillow"]
 
 [dependency-groups]
-dev = [
-    "pytest>=9.1.1",
-    "ruff",
-]
+dev = ["ruff"]
 
 [tool.ruff]
 line-length = 120
